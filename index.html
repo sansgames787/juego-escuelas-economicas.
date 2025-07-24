@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de las Escuelas Económicas</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
+    <!-- 
+    INSTRUCCIONES DE DEPLOYMENT:
+    
+    1. Guarda este archivo como "index.html"
+    2. Sube a tu hosting preferido:
+       - GitHub Pages: github.com/tu-usuario/tu-repo/settings/pages
+       - Netlify: netlify.com (arrastra la carpeta)
+       - Vercel: vercel.com (conecta tu repositorio)
+       - Firebase Hosting: firebase.google.com/docs/hosting
+    
+    3. Tu URL será algo como:
+       - GitHub Pages: https://tu-usuario.github.io/tu-repo/
+       - Netlify: https://tu-proyecto.netlify.app/
+       - Vercel: https://tu-proyecto.vercel.app/
+    
+    4. Para dominio personalizado:
+       - Compra un dominio (GoDaddy, Namecheap, etc.)
+       - Configura DNS apuntando a tu hosting
+       - Activa HTTPS en la configuración
+    
+    ¡El juego es completamente autónomo y no necesita servidor!
+    -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+        }
+
+        /* Animación de entrada suave */
+        .game-container {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .score-number {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .score-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .school-name {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .question {
+            font-size: 1.3em;
+            margin-bottom: 25px;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            text-align: left;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .option.correct {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+
+        .option.incorrect {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .start-screen, .end-screen {
+            text-align: center;
+        }
+
+        .school-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .school-item {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .feedback {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            text-align: left;
+        }
+
+        .feedback.incorrect {
+            background: #ffeaea;
+            border-left-color: #f44336;
+        }
+
+        @media (max-width: 600px) {
+            .options {
+                grid-template-columns: 1fr;
+            }
+            
+            .title {
+                font-size: 2em;
+            }
+            
+            .score-board {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Pantalla de inicio -->
+        <div id="startScreen" class="start-screen">
+            <div class="header">
+                <h1 class="title">🏛️ Escuelas Económicas</h1>
+                <p style="font-size: 1.2em; color: #666; margin-bottom: 20px;">
+                    Pon a prueba tus conocimientos sobre las principales corrientes del pensamiento económico
+                </p>
+            </div>
+            
+            <div class="school-list">
+                <div class="school-item">Mercantilismo</div>
+                <div class="school-item">Fisiocracia</div>
+                <div class="school-item">Escuela Clásica</div>
+                <div class="school-item">Escuela Neoclásica</div>
+                <div class="school-item">Marxismo</div>
+                <div class="school-item">Keynesianismo</div>
+                <div class="school-item">Economía Institucional</div>
+                <div class="school-item">Neoliberalismo</div>
+            </div>
+            
+            <p style="color: #666; margin-bottom: 20px; font-size: 0.9em;">
+                💡 Tip: Este juego funciona completamente offline. ¡Descárgalo y hostéalo en tu propio dominio!
+            </p>
+            
+            <button class="btn" onclick="startGame()">🎮 Comenzar Juego</button>
+        </div>
+
+        <!-- Pantalla del juego -->
+        <div id="gameScreen" class="hidden">
+            <div class="header">
+                <h1 class="title">🏛️ Escuelas Económicas</h1>
+            </div>
+            
+            <div class="score-board">
+                <div class="score-item">
+                    <div class="score-number" id="currentQuestion">1</div>
+                    <div class="score-label">Pregunta</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-number" id="score">0</div>
+                    <div class="score-label">Puntos</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-number" id="streak">0</div>
+                    <div class="score-label">Racha</div>
+                </div>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            
+            <div class="question-card">
+                <div class="school-name" id="schoolName"></div>
+                <div class="question" id="question"></div>
+                <div class="options" id="options"></div>
+                <div id="feedback" class="feedback hidden"></div>
+                <button class="btn" id="nextBtn" onclick="nextQuestion()" disabled>Siguiente ➡️</button>
+            </div>
+        </div>
+
+        <!-- Pantalla final -->
+        <div id="endScreen" class="hidden">
+            <div class="header">
+                <h1 class="title">🎉 ¡Juego Completado!</h1>
+            </div>
+            
+            <div class="score-board">
+                <div class="score-item">
+                    <div class="score-number" id="finalScore">0</div>
+                    <div class="score-label">Puntos Finales</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-number" id="correctAnswers">0</div>
+                    <div class="score-label">Respuestas Correctas</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-number" id="accuracy">0%</div>
+                    <div class="score-label">Precisión</div>
+                </div>
+            </div>
+            
+            <div id="performanceMessage" style="font-size: 1.3em; margin: 20px 0; color: #667eea;"></div>
+            
+            <button class="btn" onclick="restartGame()">🔄 Jugar de Nuevo</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                school: "Mercantilismo",
+                question: "¿Cuál era la principal preocupación de los mercantilistas?",
+                options: [
+                    "Maximizar las exportaciones y minimizar las importaciones",
+                    "Lograr el pleno empleo",
+                    "Distribuir equitativamente la riqueza",
+                    "Minimizar la intervención del Estado"
+                ],
+                correct: 0,
+                explanation: "Los mercantilistas creían que la riqueza nacional se basaba en acumular metales preciosos mediante una balanza comercial favorable."
+            },
+            {
+                school: "Fisiocracia",
+                question: "Los fisiócratas consideraban que la fuente de toda riqueza era:",
+                options: [
+                    "El comercio internacional",
+                    "La agricultura y la tierra",
+                    "La industria manufacturera",
+                    "Los servicios financieros"
+                ],
+                correct: 1,
+                explanation: "Los fisiócratas, liderados por François Quesnay, veían la agricultura como la única actividad productiva que generaba un excedente real."
+            },
+            {
+                school: "Escuela Clásica",
+                question: "Adam Smith es famoso por introducir el concepto de:",
+                options: [
+                    "La planificación central",
+                    "La mano invisible del mercado",
+                    "La lucha de clases",
+                    "El multiplicador keynesiano"
+                ],
+                correct: 1,
+                explanation: "La 'mano invisible' de Smith describe cómo el interés personal en mercados libres puede llevar al bienestar social general."
+            },
+            {
+                school: "Escuela Clásica",
+                question: "David Ricardo desarrolló la teoría de:",
+                options: [
+                    "La ventaja absoluta",
+                    "La ventaja comparativa",
+                    "La preferencia por la liquidez",
+                    "La utilidad marginal"
+                ],
+                correct: 1,
+                explanation: "La ventaja comparativa de Ricardo explica por qué el comercio internacional beneficia a todos los países participantes."
+            },
+            {
+                school: "Escuela Neoclásica",
+                question: "La escuela neoclásica se caracteriza por asumir que:",
+                options: [
+                    "Los mercados siempre fallan",
+                    "Los individuos son perfectamente racionales",
+                    "El Estado debe controlar la economía",
+                    "La inflación es siempre beneficiosa"
+                ],
+                correct: 1,
+                explanation: "Los neoclásicos asumen individuos racionales que maximizan su utilidad con información perfecta en mercados eficientes."
+            },
+            {
+                school: "Marxismo",
+                question: "Según Karl Marx, el motor de la historia es:",
+                options: [
+                    "La competencia perfecta",
+                    "La lucha de clases",
+                    "La mano invisible",
+                    "La utilidad marginal"
+                ],
+                correct: 1,
+                explanation: "Marx veía la historia como una serie de conflictos entre clases sociales con intereses económicos opuestos."
+            },
+            {
+                school: "Marxismo",
+                question: "El concepto de 'plusvalía' en Marx se refiere a:",
+                options: [
+                    "El valor agregado por la tecnología",
+                    "El valor no pagado del trabajo del obrero",
+                    "El incremento en los precios",
+                    "La ganancia del comercio internacional"
+                ],
+                correct: 1,
+                explanation: "La plusvalía es la diferencia entre el valor que crea el trabajador y el salario que recibe, apropiada por el capitalista."
+            },
+            {
+                school: "Keynesianismo",
+                question: "Keynes propuso que durante una recesión, el gobierno debería:",
+                options: [
+                    "Reducir el gasto público",
+                    "Aumentar el gasto público",
+                    "Eliminar todos los impuestos",
+                    "Dejar que el mercado se autorregule"
+                ],
+                correct: 1,
+                explanation: "Keynes abogaba por la intervención estatal mediante gasto público para estimular la demanda agregada en recesiones."
+            },
+            {
+                school: "Keynesianismo",
+                question: "El multiplicador keynesiano sugiere que:",
+                options: [
+                    "Un aumento en el gasto genera un aumento menor en el ingreso",
+                    "Un aumento en el gasto genera un aumento mayor en el ingreso",
+                    "El gasto público no afecta el ingreso nacional",
+                    "Solo el sector privado genera riqueza"
+                ],
+                correct: 1,
+                explanation: "El multiplicador indica que un peso invertido por el gobierno puede generar más de un peso de crecimiento económico total."
+            },
+            {
+                school: "Economía Institucional",
+                question: "Los institucionalistas enfatizan la importancia de:",
+                options: [
+                    "Solo las leyes del mercado",
+                    "Las normas, reglas y organizaciones sociales",
+                    "Únicamente los factores tecnológicos",
+                    "Exclusivamente las variables macroeconómicas"
+                ],
+                correct: 1,
+                explanation: "La escuela institucional estudia cómo las instituciones (formales e informales) influyen en el comportamiento económico."
+            },
+            {
+                school: "Neoliberalismo",
+                question: "El neoliberalismo promueve principalmente:",
+                options: [
+                    "La planificación estatal de la economía",
+                    "La liberalización de mercados y privatizaciones",
+                    "El proteccionismo comercial",
+                    "El control de precios por el Estado"
+                ],
+                correct: 1,
+                explanation: "El neoliberalismo aboga por mercados libres, menor intervención estatal, privatizaciones y liberalización comercial."
+            },
+            {
+                school: "Fisiocracia",
+                question: "¿Quién fue el principal representante de la fisiocracia?",
+                options: [
+                    "Adam Smith",
+                    "François Quesnay",
+                    "David Ricardo",
+                    "John Stuart Mill"
+                ],
+                correct: 1,
+                explanation: "François Quesnay fue el líder intelectual de los fisiócratas y creador del 'Tableau Économique'."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let streak = 0;
+        let correctAnswersCount = 0;
+        let selectedOption = null;
+        let gameQuestions = [];
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            
+            // Mezclar preguntas y tomar las primeras 10
+            gameQuestions = shuffleArray(questions).slice(0, 10);
+            currentQuestionIndex = 0;
+            score = 0;
+            streak = 0;
+            correctAnswersCount = 0;
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = gameQuestions[currentQuestionIndex];
+            
+            document.getElementById('schoolName').textContent = question.school;
+            document.getElementById('question').textContent = question.question;
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('score').textContent = score;
+            document.getElementById('streak').textContent = streak;
+            
+            // Actualizar barra de progreso
+            const progress = ((currentQuestionIndex + 1) / gameQuestions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            // Mezclar las opciones manteniendo el índice correcto
+            const optionsWithIndex = question.options.map((option, index) => ({
+                text: option,
+                originalIndex: index
+            }));
+            
+            const shuffledOptions = shuffleArray(optionsWithIndex);
+            
+            // Encontrar cuál es ahora la respuesta correcta
+            question.shuffledCorrect = shuffledOptions.findIndex(opt => opt.originalIndex === question.correct);
+            
+            // Mostrar opciones mezcladas
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            shuffledOptions.forEach((optionObj, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                const letters = ['A', 'B', 'C', 'D'];
+                optionElement.innerHTML = `<strong>${letters[index]})</strong> ${optionObj.text}`;
+                optionElement.onclick = () => selectOption(index, optionElement);
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            // Resetear estado
+            selectedOption = null;
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('feedback').classList.add('hidden');
+        }
+
+        function selectOption(optionIndex, optionElement) {
+            if (selectedOption !== null) return; // Ya se seleccionó una opción
+            
+            selectedOption = optionIndex;
+            const question = gameQuestions[currentQuestionIndex];
+            const isCorrect = optionIndex === question.shuffledCorrect;
+            
+            // Mostrar todas las opciones con sus colores
+            const options = document.querySelectorAll('.option');
+            options.forEach((opt, idx) => {
+                if (idx === question.shuffledCorrect) {
+                    opt.classList.add('correct');
+                } else if (idx === optionIndex && !isCorrect) {
+                    opt.classList.add('incorrect');
+                }
+                opt.style.pointerEvents = 'none';
+            });
+            
+            // Mostrar feedback
+            const feedbackElement = document.getElementById('feedback');
+            feedbackElement.textContent = question.explanation;
+            feedbackElement.className = 'feedback ' + (isCorrect ? '' : 'incorrect');
+            feedbackElement.classList.remove('hidden');
+            
+            // Actualizar puntaje
+            if (isCorrect) {
+                correctAnswersCount++;
+                streak++;
+                score += 10 + (streak * 2); // Bonus por racha
+            } else {
+                streak = 0;
+            }
+            
+            document.getElementById('score').textContent = score;
+            document.getElementById('streak').textContent = streak;
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex >= gameQuestions.length) {
+                endGame();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('endScreen').classList.remove('hidden');
+            
+            const accuracy = Math.round((correctAnswersCount / gameQuestions.length) * 100);
+            
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('correctAnswers').textContent = correctAnswersCount + '/' + gameQuestions.length;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            
+            // Mensaje de rendimiento
+            let message = '';
+            if (accuracy >= 90) {
+                message = '🏆 ¡Excelente! Eres un experto en escuelas económicas';
+            } else if (accuracy >= 70) {
+                message = '👍 ¡Muy bien! Tienes buenos conocimientos de economía';
+            } else if (accuracy >= 50) {
+                message = '📚 No está mal, pero puedes mejorar estudiando más';
+            } else {
+                message = '💪 Sigue estudiando, hay mucho por aprender';
+            }
+            
+            document.getElementById('performanceMessage').textContent = message;
+        }
+
+        function restartGame() {
+            document.getElementById('endScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
